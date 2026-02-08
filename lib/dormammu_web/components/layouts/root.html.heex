@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content={get_csrf_token()} />
+    <.live_title default="Dormammu" suffix=" · Phoenix Framework">
+      {assigns[:page_title]}
+    </.live_title>
+    <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+    </script>
+    <script>
+      (() => {
+        const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+        const apply = (mode) => {
+          const theme = mode === "system" ? (media.matches ? "dark" : "light") : mode;
+          document.documentElement.setAttribute("data-theme", theme);
+          document.documentElement.setAttribute("data-theme-mode", mode);
+        };
+
+        const setThemeMode = (mode) => {
+          if (mode === "system") {
+            localStorage.removeItem("phx:theme");
+          } else {
+            localStorage.setItem("phx:theme", mode);
+          }
+          apply(mode);
+        };
+
+        // Initial load (before LiveView connects)
+        apply(localStorage.getItem("phx:theme") || "system");
+
+        // Sync across tabs/windows
+        window.addEventListener("storage", (e) => {
+          if (e.key === "phx:theme") apply(e.newValue || "system");
+        });
+
+        // React to OS changes when in system mode
+        media.addEventListener("change", () => {
+          if ((localStorage.getItem("phx:theme") || "system") === "system") apply("system");
+        });
+
+        // LiveView dispatch from the toggle buttons
+        window.addEventListener("phx:set-theme", (e) => setThemeMode(e.target.dataset.phxTheme));
+      })();
+    </script>
+  </head>
+  <body>
+    <%= if assigns[:current_user] do %>
+      <nav class="navbar bg-base-200 px-4">
+        <div class="flex-1">
+          <a href="/" class="btn btn-ghost btn-sm">
+            Dormammu
+          </a>
+          <%= if assigns[:current_user].role == :admin do %>
+            <a href={~p"/admin"} class="btn btn-ghost btn-sm">Admin</a>
+          <% else %>
+            <a href={~p"/me/dashboard"} class="btn btn-ghost btn-sm">Dashboard</a>
+            <a href={~p"/me/records"} class="btn btn-ghost btn-sm">Records</a>
+          <% end %>
+        </div>
+        <div class="flex-none gap-2 flex items-center">
+          <.theme_toggle />
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm"
+            phx-click={JS.toggle_class("hidden", to: "#widget-overlay")}
+          >
+            Open widget
+          </button>
+          <%= if assigns[:current_user].role == :admin do %>
+            <a href={~p"/admin/reports"} class="btn btn-ghost btn-sm">Reports</a>
+          <% end %>
+          <span class="text-sm opacity-70">
+            {assigns[:current_user].display_name || assigns[:current_user].email || "User"}
+          </span>
+          <form action={~p"/logout"} method="post" class="inline">
+            <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
+            <input type="hidden" name="_method" value="delete" />
+            <button type="submit" class="btn btn-ghost btn-sm">Sign out</button>
+          </form>
+        </div>
+      </nav>
+    <% end %>
+    <.flash_group flash={assigns[:flash] || %{}} />
+    {@inner_content}
+  </body>
+</html>

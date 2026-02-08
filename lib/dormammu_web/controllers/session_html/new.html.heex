@@ -1,0 +1,29 @@
+<div class="max-w-md mx-auto py-12 space-y-6">
+  <h1 class="text-2xl font-semibold text-center">Sign In</h1>
+  
+  <form method="post" action={~p"/login"} class="space-y-4">
+    <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
+    <div class="form-control">
+      <label class="label text-sm font-medium">Email</label>
+      <input
+        name="email"
+        type="email"
+        class="input input-bordered"
+        required
+        autocomplete="username"
+      />
+    </div>
+    
+    <div class="form-control">
+      <label class="label text-sm font-medium">Password</label>
+      <input
+        name="password"
+        type="password"
+        class="input input-bordered"
+        required
+        autocomplete="current-password"
+      />
+    </div>
+     <button class="btn btn-primary w-full" type="submit">Sign In</button>
+  </form>
+</div>
